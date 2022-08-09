@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 from botocore.exceptions import ClientError
 
@@ -34,6 +34,8 @@ class RedshiftHook(AwsBaseHook):
 
     :param aws_conn_id: The Airflow connection used for AWS credentials.
     """
+
+    template_fields: Sequence[str] = ('cluster_identifier',)
 
     def __init__(self, *args, **kwargs) -> None:
         kwargs["client_type"] = "redshift"
