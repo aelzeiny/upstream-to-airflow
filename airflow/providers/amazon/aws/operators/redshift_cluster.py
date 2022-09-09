@@ -263,6 +263,11 @@ class RedshiftCreateClusterSnapshotOperator(BaseOperator):
         The default connection id is ``aws_default``
     """
 
+    template_fields: Sequence[str] = (
+        "cluster_identifier",
+        "snapshot_identifier",
+    )
+
     def __init__(
         self,
         *,
@@ -301,7 +306,6 @@ class RedshiftCreateClusterSnapshotOperator(BaseOperator):
         if self.wait_for_completion:
             self.redshift_hook.get_conn().get_waiter("snapshot_available").wait(
                 ClusterIdentifier=self.cluster_identifier,
-                SnapshotIdentifier=self.snapshot_identifier,
                 WaiterConfig={
                     "Delay": self.poll_interval,
                     "MaxAttempts": self.max_attempt,
@@ -325,6 +329,11 @@ class RedshiftDeleteClusterSnapshotOperator(BaseOperator):
         The default connection id is ``aws_default``
     :param poll_interval: Time (in seconds) to wait between two consecutive calls to check snapshot state
     """
+
+    template_fields: Sequence[str] = (
+        "cluster_identifier",
+        "snapshot_identifier",
+    )
 
     def __init__(
         self,
