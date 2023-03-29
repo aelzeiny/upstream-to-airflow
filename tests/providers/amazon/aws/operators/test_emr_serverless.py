@@ -27,6 +27,7 @@ from airflow.providers.amazon.aws.operators.emr import (
     EmrServerlessDeleteApplicationOperator,
     EmrServerlessStartJobOperator,
 )
+from airflow.utils.types import NOTSET
 
 task_id = "test_emr_serverless_task_id"
 application_id = "test_application_id"
@@ -247,6 +248,33 @@ class TestEmrServerlessCreateApplicationOperator:
             type=job_type,
             **config,
         )
+
+    @pytest.mark.parametrize(
+        "waiter_delay, waiter_max_attempts, waiter_countdown, waiter_check_interval_seconds, expected",
+        [
+            (NOTSET, NOTSET, NOTSET, NOTSET, [60, 25]),
+            (30, 10, NOTSET, NOTSET, [30, 10]),
+            (NOTSET, NOTSET, 30 * 15, 15, [15, 30]),
+            (10, 20, 30, 40, [10, 20]),
+        ],
+    )
+    def test_create_application_waiter_params(
+        self, waiter_delay, waiter_max_attempts, waiter_countdown, waiter_check_interval_seconds, expected
+    ):
+        operator = EmrServerlessCreateApplicationOperator(
+            task_id=task_id,
+            release_label=release_label,
+            job_type=job_type,
+            client_request_token=client_request_token,
+            config=config,
+            waiter_delay=waiter_delay,
+            waiter_max_attempts=waiter_max_attempts,
+            waiter_countdown=waiter_countdown,
+            waiter_check_interval_seconds=waiter_check_interval_seconds,
+        )
+        assert operator.wait_for_completion is True
+        assert operator.waiter_delay == expected[0]
+        assert operator.waiter_max_attempts == expected[1]
 
 
 class TestEmrServerlessStartJobOperator:
@@ -571,6 +599,33 @@ class TestEmrServerlessStartJobOperator:
             name=custom_name,
         )
 
+    @pytest.mark.parametrize(
+        "waiter_delay, waiter_max_attempts, waiter_countdown, waiter_check_interval_seconds, expected",
+        [
+            (NOTSET, NOTSET, NOTSET, NOTSET, [60, 25]),
+            (30, 10, NOTSET, NOTSET, [30, 10]),
+            (NOTSET, NOTSET, 30 * 15, 15, [15, 30]),
+            (10, 20, 30, 40, [10, 20]),
+        ],
+    )
+    def test_start_job_waiter_params(
+        self, waiter_delay, waiter_max_attempts, waiter_countdown, waiter_check_interval_seconds, expected
+    ):
+        operator = EmrServerlessStartJobOperator(
+            task_id=task_id,
+            application_id=application_id,
+            execution_role_arn=execution_role_arn,
+            job_driver=job_driver,
+            configuration_overrides=configuration_overrides,
+            waiter_delay=waiter_delay,
+            waiter_max_attempts=waiter_max_attempts,
+            waiter_countdown=waiter_countdown,
+            waiter_check_interval_seconds=waiter_check_interval_seconds,
+        )
+        assert operator.wait_for_completion is True
+        assert operator.waiter_delay == expected[0]
+        assert operator.waiter_max_attempts == expected[1]
+
 
 class TestEmrServerlessDeleteOperator:
     @mock.patch("airflow.providers.amazon.aws.operators.emr.waiter")
@@ -630,3 +685,27 @@ class TestEmrServerlessDeleteOperator:
         mock_waiter.assert_called_once()
         mock_conn.stop_application.assert_called_once()
         mock_conn.delete_application.assert_called_once_with(applicationId=application_id_delete_operator)
+
+    @pytest.mark.parametrize(
+        "waiter_delay, waiter_max_attempts, waiter_countdown, waiter_check_interval_seconds, expected",
+        [
+            (NOTSET, NOTSET, NOTSET, NOTSET, [60, 25]),
+            (30, 10, NOTSET, NOTSET, [30, 10]),
+            (NOTSET, NOTSET, 30 * 15, 15, [15, 30]),
+            (10, 20, 30, 40, [10, 20]),
+        ],
+    )
+    def test_delete_application_waiter_params(
+        self, waiter_delay, waiter_max_attempts, waiter_countdown, waiter_check_interval_seconds, expected
+    ):
+        operator = EmrServerlessDeleteApplicationOperator(
+            task_id=task_id,
+            application_id=application_id,
+            waiter_delay=waiter_delay,
+            waiter_max_attempts=waiter_max_attempts,
+            waiter_countdown=waiter_countdown,
+            waiter_check_interval_seconds=waiter_check_interval_seconds,
+        )
+        assert operator.wait_for_completion is True
+        assert operator.waiter_delay == expected[0]
+        assert operator.waiter_max_attempts == expected[1]
